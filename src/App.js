@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Mail, RefreshCw, Trash2, Copy, CheckCircle, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
-const API_KEY = '7skiQDEg2v8ZuKYMrm1C';
-const BASE_URL = 'https://ios.priyo.email/api';
+const API_KEY = process.env.REACT_APP_API_KEY || '7skiQDEg2v8ZuKYMrm1C';
+const BASE_URL = process.env.REACT_APP_BASE_URL || 'https://ios.priyo.email/api';
+const PRIYO_TOKEN = process.env.REACT_APP_PRIYO_TOKEN || 'D6Ca784OeZsHrimuPdr3FtLEFL6XdYvhdDIYuCK7';
+const PRIYO_URL = process.env.REACT_APP_PRIYO_URL || 'https://priyo.email/vi/livewire/update';
 
 function App() {
   const [domains, setDomains] = useState([]);
@@ -100,8 +102,8 @@ function App() {
       try {
         setLoading(true);
         
-        const response = await axios.post('https://priyo.email/vi/livewire/update', {
-          _token: 'D6Ca784OeZsHrimuPdr3FtLEFL6XdYvhdDIYuCK7',
+        const response = await axios.post(PRIYO_URL, {
+          _token: PRIYO_TOKEN,
           components: [{
             calls: [{
               path: '',

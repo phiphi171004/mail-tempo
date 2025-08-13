@@ -58,14 +58,7 @@ npm start
 - Mỗi tin nhắn có nút xóa (biểu tượng thùng rác)
 - Nhấn vào để xóa tin nhắn không mong muốn
 
-## API Endpoints
 
-Ứng dụng sử dụng các API sau:
-
-- `GET /api/domains/{key}` - Lấy danh sách domain
-- `GET /api/random-email/{key}` - Tạo email ngẫu nhiên
-- `GET /api/messages/{email}/{key}` - Lấy tin nhắn
-- `DELETE /api/message/{message_id}/{key}` - Xóa tin nhắn
 
 ## Email Tùy Chỉnh
 
@@ -105,13 +98,26 @@ package.json        # Dependencies
 
 ## Tùy chỉnh
 
-Bạn có thể thay đổi API key trong file `src/App.js`:
+### **1. Tạo file .env:**
 
-```javascript
-const API_KEY = 'your-api-key-here';
+Tạo file `.env` trong thư mục gốc của project:
+
+
+### **2. Thay đổi API Key:**
+
+Thay đổi giá trị trong file `.env`:
+
+```bash
+REACT_APP_API_KEY=your-new-api-key-here
 ```
 
-**Lưu ý**: API key hiện tại `7skiQDEg2v8ZuKYMrm1C` là key công khai và có thể bị giới hạn.
+### **3. Restart ứng dụng:**
+
+Sau khi thay đổi `.env`, restart lại ứng dụng:
+
+```bash
+npm start
+``
 
 ## Lưu ý
 
@@ -127,5 +133,5 @@ Nếu gặp vấn đề, hãy kiểm tra:
 3. Console browser để xem lỗi chi tiết
 
 ## License
-
+Liên Hệ: tangocphiphi1710@gmail.com
 Dự án này được phát triển cho mục đích học tập và sử dụng cá nhân. 
