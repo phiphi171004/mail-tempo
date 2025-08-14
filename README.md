@@ -1,6 +1,6 @@
 # Temp Mail Asia - Ứng dụng Email Tạm Thời
 
-Ứng dụng React JS để tạo và quản lý email tạm thời sử dụng API của Temp Mail Asia.
+Ứng dụng React JS để tạo và quản lý email tạm thời.
 
 ## Tính năng
 
@@ -15,6 +15,9 @@
 - ✅ Click để mở/đóng nội dung tin nhắn chi tiết
 - ✅ Giao diện đẹp và responsive
 - ✅ Hỗ trợ tiếng Việt
+- ✅ SEO tối ưu
+- ✅ Google Analytics & Tag Manager
+- ✅ PWA support
 
 ## Cài đặt
 
@@ -23,7 +26,9 @@
 npm install
 ```
 
-2. Chạy ứng dụng:
+2. Tạo file `.env` với cấu hình cần thiết
+
+3. Chạy ứng dụng:
 ```bash
 npm start
 ```
@@ -37,7 +42,7 @@ npm start
 - Bạn có thể nhấn nút "Làm mới" để tải lại danh sách
 
 ### 2. Tạo Email Tạm Thời
-- **Email Ngẫu Nhiên**: Nhấn nút "Tạo Email Ngẫu Nhiên" để tạo một email ngẫu nhiên
+- **Email Ngẫu Nhiên**: Ứng dụng tự động tạo email ngẫu nhiên khi load
 - **Email Tùy Chỉnh**: Nhấn nút "Tạo Email Tùy Chỉnh" để mở form tùy chỉnh
   - Nhập tên người dùng mong muốn
   - Chọn domain từ danh sách có sẵn
@@ -51,28 +56,12 @@ npm start
 - **Danh sách tin nhắn**: Hiển thị chủ đề, người gửi và thời gian
 - **Xem chi tiết**: Click vào tin nhắn để mở nội dung đầy đủ
 - **Giao diện đẹp**: Thiết kế giống email client thực tế
-- Bạn có thể bật "Tự động làm mới" để tự động cập nhật tin nhắn mỗi 10 giây
+- Tin nhắn tự động làm mới mỗi 5 giây
 - Nhấn nút "Làm mới" để tải lại tin nhắn thủ công
 
 ### 4. Xóa Tin Nhắn
 - Mỗi tin nhắn có nút xóa (biểu tượng thùng rác)
 - Nhấn vào để xóa tin nhắn không mong muốn
-
-
-
-## Email Tùy Chỉnh
-
-Email tùy chỉnh hoạt động theo môi trường:
-
-### **Development (localhost):**
-- Tạo email **client-side** để tránh CORS error
-- Email format: `username@domain`
-
-### **Production (Vercel):**
-- **Thử gọi API** Priyo Email trước
-- Nếu API thành công: Email được tạo qua server
-- Nếu API thất bại: **Fallback** về client-side
-- Đảm bảo hoạt động trong mọi trường hợp
 
 ## Công nghệ sử dụng
 
@@ -91,47 +80,32 @@ src/
 └── index.css       # Styles chính
 
 public/
-└── index.html      # HTML template
+├── index.html      # HTML template
+├── robots.txt      # SEO robots
+├── sitemap.xml     # SEO sitemap
+├── manifest.json   # PWA manifest
+└── favicon.ico     # Favicon
 
 package.json        # Dependencies
 ```
-
-## Tùy chỉnh
-
-### **1. Tạo file .env:**
-
-Tạo file `.env` trong thư mục gốc của project:
-
-
-### **2. Thay đổi API Key:**
-
-Thay đổi giá trị trong file `.env`:
-
-```bash
-REACT_APP_API_KEY=your-new-api-key-here
-```
-
-### **3. Restart ứng dụng:**
-
-Sau khi thay đổi `.env`, restart lại ứng dụng:
-
-```bash
-npm start
-``
 
 ## Lưu ý
 
 - Email tạm thời có thể bị xóa sau một thời gian
 - Không sử dụng cho các mục đích quan trọng
-- API key được sử dụng là key công khai, có thể bị giới hạn
+- Cần có cấu hình hợp lệ để sử dụng
 
 ## Hỗ trợ
 
 Nếu gặp vấn đề, hãy kiểm tra:
 1. Kết nối internet
-2. API key có hợp lệ không
+2. Cấu hình có hợp lệ không
 3. Console browser để xem lỗi chi tiết
 
+## Liên Hệ
+
+**Email**: tangocphiphi1710@gmail.com
+
 ## License
-Liên Hệ: tangocphiphi1710@gmail.com
+
 Dự án này được phát triển cho mục đích học tập và sử dụng cá nhân. 

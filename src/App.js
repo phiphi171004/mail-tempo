@@ -16,6 +16,7 @@ function App() {
   });
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -23,6 +24,9 @@ function App() {
   const [selectedDomain, setSelectedDomain] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [expandedMessage, setExpandedMessage] = useState(null);
+  const [emailExpiryTimer, setEmailExpiryTimer] = useState(null);
+  const [emailExpiryTime, setEmailExpiryTime] = useState(null);
+  const [timerTick, setTimerTick] = useState(0);
 
   // Lấy danh sách domain
   const fetchDomains = async () => {
@@ -48,6 +52,41 @@ function App() {
     }
   };
 
+  // Thiết lập timer cho email (10 phút)
+  const setupEmailExpiryTimer = (email) => {
+    // Xóa timer cũ nếu có
+    if (emailExpiryTimer) {
+      clearTimeout(emailExpiryTimer);
+    }
+
+    // Thiết lập thời gian hết hạn (10 phút = 600,000ms)
+    const expiryTime = Date.now() + 10 * 60 * 1000;
+    setEmailExpiryTime(expiryTime);
+    
+    // Lưu thời gian hết hạn vào localStorage
+    localStorage.setItem('tempMailExpiryTime', expiryTime.toString());
+
+    // Thiết lập timer
+    const timer = setTimeout(() => {
+      console.log('Email expired, generating new one...');
+      generateRandomEmail();
+    }, 10 * 60 * 1000);
+
+    setEmailExpiryTimer(timer);
+  };
+
+  // Xóa timer khi email bị xóa
+  const clearEmailExpiryTimer = () => {
+    if (emailExpiryTimer) {
+      clearTimeout(emailExpiryTimer);
+      setEmailExpiryTimer(null);
+    }
+    setEmailExpiryTime(null);
+    
+    // Xóa thời gian hết hạn khỏi localStorage
+    localStorage.removeItem('tempMailExpiryTime');
+  };
+
   // Tạo email ngẫu nhiên
   const generateRandomEmail = async () => {
     try {
@@ -58,9 +97,12 @@ function App() {
       setMessages([]);
       setError('');
       
+      // Thiết lập timer cho email mới (10 phút)
+      setupEmailExpiryTimer(response.data);
+      
       // Tự động lấy tin nhắn sau khi tạo email
       setTimeout(() => {
-        fetchMessages(response.data.email);
+        fetchMessagesAuto(response.data.email);
       }, 1000);
     } catch (err) {
       setError('Không thể tạo email ngẫu nhiên');
@@ -140,14 +182,34 @@ function App() {
     setError('');
     setShowCustomForm(false);
     
+    // Thiết lập timer cho email tùy chỉnh (10 phút)
+    setupEmailExpiryTimer(customEmail);
+    
     // Tự động lấy tin nhắn sau khi tạo email
     setTimeout(() => {
-      fetchMessages(customEmail.email);
+      fetchMessagesAuto(customEmail.email);
     }, 1000);
   };
 
-  // Lấy tin nhắn
+  // Lấy tin nhắn (cho manual refresh)
   const fetchMessages = async (email) => {
+    if (!email) return;
+    
+    try {
+      setRefreshing(true);
+      const response = await axios.get(`${BASE_URL}/messages/${email}/${API_KEY}`);
+      setMessages(response.data);
+      setError('');
+    } catch (err) {
+      setError('Không thể tải tin nhắn');
+      console.error('Error fetching messages:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Lấy tin nhắn (cho auto refresh - không có loading state)
+  const fetchMessagesAuto = async (email) => {
     if (!email) return;
     
     try {
@@ -173,15 +235,23 @@ function App() {
     }
   };
 
-  // Xóa email
+  // Xóa email và tạo email mới
   const deleteEmail = async (email) => {
     try {
-      // Priyo Email không có API xóa email, chỉ xóa khỏi local state
+      // Xóa timer khi xóa email
+      clearEmailExpiryTimer();
+      
+      // Xóa email hiện tại
       setCurrentEmail(null);
-      saveEmailToStorage(null); // Xóa khỏi localStorage
+      saveEmailToStorage(null);
       setMessages([]);
       setError('');
-      setExpandedMessage(null); // Đóng tin nhắn nếu đang mở
+      setExpandedMessage(null);
+      
+      // Tự động tạo email mới
+      setTimeout(() => {
+        generateRandomEmail();
+      }, 500);
     } catch (err) {
       setError('Không thể xóa email');
       console.error('Error deleting email:', err);
@@ -231,12 +301,13 @@ function App() {
     return 'Không xác định';
   };
 
-  // Auto refresh tin nhắn mỗi 5 giây
+  // Auto refresh tin nhắn mỗi 5 giây (tách riêng với timer)
   useEffect(() => {
     let interval;
     if (currentEmail?.email) {
       interval = setInterval(() => {
-        fetchMessages(currentEmail.email);
+        // Auto refresh không set refreshing state
+        fetchMessagesAuto(currentEmail.email);
       }, 5000); // Refresh mỗi 5 giây
     }
     return () => {
@@ -253,9 +324,59 @@ function App() {
       generateRandomEmail();
     } else {
       // Nếu có email đã lưu, tự động lấy tin nhắn
-      fetchMessages(currentEmail.email);
+      fetchMessagesAuto(currentEmail.email);
     }
   }, []); // Chỉ chạy 1 lần khi mount
+
+  // useEffect để khôi phục timer khi load lại trang
+  useEffect(() => {
+    if (currentEmail && !emailExpiryTimer) {
+      // Kiểm tra xem email có còn hạn không
+      const now = Date.now();
+      const savedExpiryTime = localStorage.getItem('tempMailExpiryTime');
+      
+      if (savedExpiryTime) {
+        const expiryTime = parseInt(savedExpiryTime);
+        if (now < expiryTime) {
+          // Email vẫn còn hạn, thiết lập lại timer
+          const remainingTime = expiryTime - now;
+          const timer = setTimeout(() => {
+            console.log('Email expired, generating new one...');
+            generateRandomEmail();
+          }, remainingTime);
+          
+          setEmailExpiryTimer(timer);
+          setEmailExpiryTime(expiryTime);
+        } else {
+          // Email đã hết hạn, tạo email mới
+          console.log('Email expired, generating new one...');
+          generateRandomEmail();
+        }
+      } else {
+        // Không có thời gian hết hạn, thiết lập timer mới
+        setupEmailExpiryTimer(currentEmail);
+      }
+    }
+  }, [currentEmail, emailExpiryTimer]);
+
+  // useEffect để cập nhật thời gian còn lại mỗi giây
+  useEffect(() => {
+    if (emailExpiryTime) {
+      const interval = setInterval(() => {
+        // Cập nhật thời gian còn lại mỗi giây
+        const now = Date.now();
+        if (now >= emailExpiryTime) {
+          // Email đã hết hạn, tạo email mới
+          generateRandomEmail();
+        } else {
+          // Force re-render để cập nhật thời gian còn lại
+          setTimerTick(prev => prev + 1);
+        }
+      }, 1000); // Cập nhật mỗi giây
+
+      return () => clearInterval(interval);
+    }
+  }, [emailExpiryTime]);
 
   return (
     <div className="app-container">
@@ -264,7 +385,7 @@ function App() {
         <div className="app-header">
           <h1 className="app-title">
             <Mail className="header-icon" />
-            Temp Mail Asia
+            Temp Mail PP
           </h1>
           <p className="app-subtitle">Email tạm thời an toàn và miễn phí</p>
         </div>
@@ -290,6 +411,15 @@ function App() {
               >
                 {showCustomForm ? 'Ẩn Form Tùy Chỉnh' : 'Tạo Email Tùy Chỉnh'}
               </button>
+              {currentEmail && (
+                <button
+                  onClick={() => deleteEmail(currentEmail.email)}
+                  className="generate-btn delete"
+                >
+                  <Trash2 className="btn-icon" />
+                  Xóa Email
+                </button>
+              )}
             </div>
 
             {/* Custom Email Form */}
@@ -357,11 +487,23 @@ function App() {
               <div className="email-info">
                 <div className="email-header">
                   <h3 className="email-title">Email đã tạo:</h3>
-                  {currentEmail.isCustom && (
-                    <span className="custom-badge">
-                      Tùy chỉnh
-                    </span>
-                  )}
+                  <div className="email-header-right">
+                    {currentEmail.isCustom && (
+                      <span className="custom-badge">
+                        Tùy chỉnh
+                      </span>
+                    )}
+                    {emailExpiryTime && (
+                      <div className="email-timer">
+                        <span className="timer-label">Time:</span>
+                        <span className="timer-value">
+                          {Math.max(0, Math.floor((emailExpiryTime - Date.now()) / 1000 / 60))}:{String(Math.max(0, Math.floor(((emailExpiryTime - Date.now()) / 1000) % 60))).padStart(2, '0')}
+                          {/* timerTick để force update mỗi giây */}
+                          <span style={{display: 'none'}}>{timerTick}</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="email-details">
                   <div className="email-row">
@@ -377,34 +519,11 @@ function App() {
                       </button>
                     </div>
                   </div>
-                  {currentEmail.password && (
-                    <div className="email-row">
-                      <span className="email-label">Mật khẩu:</span>
-                      <div className="email-value">
-                        <span className="email-password">{currentEmail.password}</span>
-                        <button
-                          onClick={() => copyToClipboard(currentEmail.password)}
-                          className="copy-btn"
-                          title="Copy password"
-                        >
-                          {copied ? <CheckCircle className="copy-icon" /> : <Copy className="copy-icon" />}
-                        </button>
-                      </div>
-                    </div>
-                  )}
+
                   <div className="email-row">
                     <span className="email-label">Trạng thái:</span>
                     <span className="email-status">Email tạm thời đã sẵn sàng nhận tin nhắn</span>
                   </div>
-                </div>
-                <div className="email-actions">
-                  <button
-                    onClick={() => deleteEmail(currentEmail.email)}
-                    className="delete-email-btn"
-                  >
-                    <Trash2 className="btn-icon" />
-                    Xóa Email
-                  </button>
                 </div>
               </div>
             )}
@@ -420,11 +539,11 @@ function App() {
                 <div className="messages-controls">
                   <button
                     onClick={() => fetchMessages(currentEmail.email)}
-                    disabled={loading}
-                    className={`refresh-messages-btn ${loading ? 'loading' : ''}`}
+                    disabled={refreshing}
+                    className={`refresh-messages-btn ${refreshing ? 'loading' : ''}`}
                   >
                     <RefreshCw className="btn-icon" />
-                    Làm mới
+                    {refreshing ? 'Đang làm mới...' : 'Làm mới'}
                   </button>
                 </div>
               </div>
@@ -618,7 +737,7 @@ function App() {
 
         {/* Footer */}
         <div className="app-footer">
-          <p>© 2024 Temp Mail Asia - Email tạm thời an toàn</p>
+          <p>© 2024 Temp Mail PP - Email tạm thời an toàn</p>
         </div>
       </div>
     </div>

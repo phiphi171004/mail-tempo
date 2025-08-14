@@ -146,6 +146,14 @@ code {
   to { transform: rotate(360deg); }
 }
 
+@keyframes spin-smooth {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Email Buttons */
 .email-buttons {
   display: flex;
@@ -185,6 +193,15 @@ code {
 
 .generate-btn.custom:hover {
   background: #1d4ed8;
+}
+
+.generate-btn.delete {
+  background: #dc2626;
+  color: white;
+}
+
+.generate-btn.delete:hover {
+  background: #b91c1c;
 }
 
 /* Custom Form */
@@ -294,6 +311,12 @@ code {
   margin-bottom: 0.75rem;
 }
 
+.email-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .email-title {
   font-size: 1.125rem;
   font-weight: 600;
@@ -307,6 +330,33 @@ code {
   font-size: 0.75rem;
   font-weight: 500;
   border-radius: 9999px;
+}
+
+.email-timer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 0.5rem;
+}
+
+.timer-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #92400e;
+}
+
+.timer-value {
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #d97706;
+  background: #fef3c7;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid #f59e0b;
 }
 
 .email-details {
@@ -447,7 +497,7 @@ code {
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .refresh-messages-btn:hover {
@@ -455,7 +505,16 @@ code {
 }
 
 .refresh-messages-btn.loading .btn-icon {
-  animation: spin 1s linear infinite;
+  animation: spin-smooth 0.8s linear infinite;
+}
+
+.refresh-messages-btn:active .btn-icon {
+  animation: spin 0.3s ease-out;
+}
+
+.refresh-messages-btn:hover .btn-icon {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
 }
 
 /* No Messages */
